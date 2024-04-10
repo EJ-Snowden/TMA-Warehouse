@@ -11,6 +11,9 @@ version '1.0-SNAPSHOT'
 
 repositories {
   mavenCentral()
+  flatDir {
+    dirs 'libs'
+  }
 }
 
 ext {
@@ -38,6 +41,8 @@ dependencies {
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+
+  implementation("com.oracle.database.jdbc:ojdbc11-production:21.13.0.0")
 }
 
 test {
