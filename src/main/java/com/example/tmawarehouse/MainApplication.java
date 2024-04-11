@@ -1,6 +1,7 @@
 package com.example.tmawarehouse;
 
 import com.example.tmawarehouse.Data.Item;
+import com.example.tmawarehouse.Data.TMA_Requests;
 import com.example.tmawarehouse.Model.DBHelper;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
@@ -40,6 +41,23 @@ public class MainApplication extends Application {
             throw new RuntimeException(e);
         }
     }
+    public static void loadPurchaseRequests(ObservableList<TMA_Requests> requestList) {
+        try {
+            statement = dbHelper.getConnection().createStatement();
+
+            String query = "SELECT * FROM TMA_REQUESTS";
+            ResultSet rs = statement.executeQuery(query);
+            while (rs.next()){
+                requestList.add(new TMA_Requests(rs.getInt("RequestID"), rs.getInt("EmployeeID"), rs.getInt("ItemID"),
+                        rs.getString("UnitOfMeasurement"), rs.getInt("Quantity"), rs.getDouble("PriceWithoutVAT"),
+                        rs.getString("COMMENT"), rs.getString("Status")));
+            }
+//            TODO: Get price from item * quantity
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public static void main(String[] args) {
         try {

@@ -7,18 +7,18 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.tmawarehouse.Controllers.CoordinatorController">
-    <TextField fx:id="searchField" promptText="Search by name" maxWidth="1.7976931348623157E308" />
+    <TextField fx:id="itemSearchField" promptText="Search by name" maxWidth="1.7976931348623157E308" />
     <TableView fx:id="itemTableView">
         <columns>
-            <TableColumn fx:id="idColumn" text="ID" />
+            <TableColumn fx:id="itemIDColumn" text="ID" />
             <TableColumn fx:id="itemNameColumn" text="Item Name" />
             <TableColumn fx:id="groupNameColumn" text="Group Name" />
-            <TableColumn fx:id="unitOfMeasurementColumn" text="Unit of Measurement" />
-            <TableColumn fx:id="quantityColumn" text="Quantity" />
-            <TableColumn fx:id="priceWithoutVATColumn" text="Price Without VAT" />
-            <TableColumn fx:id="statusColumn" text="Status" />
-            <TableColumn fx:id="storageLocationColumn" text="Storage Location" />
-            <TableColumn fx:id="contactPersonColumn" text="Contact Person" />
+            <TableColumn fx:id="itemUnitOfMeasurementColumn" text="Unit of Measurement" />
+            <TableColumn fx:id="itemQuantityColumn" text="Quantity" />
+            <TableColumn fx:id="itemPriceWithoutVATColumn" text="Price Without VAT" />
+            <TableColumn fx:id="itemStatusColumn" text="Status" />
+            <TableColumn fx:id="itemStorageLocationColumn" text="Storage Location" />
+            <TableColumn fx:id="itemContactPersonColumn" text="Contact Person" />
         </columns>
     </TableView>
 
@@ -26,5 +26,25 @@
         <Button fx:id="addButton" text="Add" />
         <Button fx:id="updateButton" text="Update" />
         <Button fx:id="removeButton" text="Remove" />
+    </HBox>
+
+    <TextField fx:id="requestSearchField" promptText="Search by request ID" maxWidth="1.7976931348623157E308" />
+    <TableView fx:id="requestTableView">
+        <columns>
+            <TableColumn fx:id="requestIDColumn" text="ID" />
+            <TableColumn fx:id="requestEmpNameColumn" text="Employee" />
+            <TableColumn fx:id="requestItemNameColumn" text="Item" />
+            <TableColumn fx:id="requestUnitOfMeasurements" text="Unit of Measurement" />
+            <TableColumn fx:id="requestQuantityColumn" text="Quantity" />
+            <TableColumn fx:id="requestPriceWithoutVATColumn" text="Price Without VAT" />
+            <TableColumn fx:id="requestCommentColumn" text="Comment" />
+            <TableColumn fx:id="requestStatusColumn" text="Status" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <Button fx:id="openRequestButton" text="Open Request" />
+        <Button fx:id="confirmRequestButton" text="Confirm" />
+        <Button fx:id="rejectRequestButton" text="Reject" />
     </HBox>
 </VBox>

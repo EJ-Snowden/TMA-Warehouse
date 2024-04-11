@@ -1,6 +1,7 @@
 package com.example.tmawarehouse.Controllers;
 
 import com.example.tmawarehouse.Data.Item;
+import com.example.tmawarehouse.Data.TMA_Requests;
 import com.example.tmawarehouse.MainApplication;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,59 +16,91 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class CoordinatorController {
 
-    public TableColumn unitOfMeasurementColumn;
-    public TableColumn quantityColumn;
-    public TableColumn priceWithoutVATColumn;
-    public TableColumn statusColumn;
-    public TableColumn storageLocationColumn;
-    public TableColumn contactPersonColumn;
     @FXML
-    private TextField searchField;
+    private TextField itemSearchField, requestSearchField;
     @FXML
     private TableView<Item> itemTableView;
     @FXML
-    private TableColumn<Item, Integer> idColumn;
+    private TableView<TMA_Requests> requestTableView;
     @FXML
-    private TableColumn<Item, String> itemNameColumn;
+    private TableColumn<Item, Integer> itemIDColumn;
     @FXML
-    private TableColumn<Item, String> groupNameColumn;
+    private TableColumn<Item, String> itemNameColumn, groupNameColumn;
+    @FXML
+    public TableColumn itemUnitOfMeasurementColumn, itemQuantityColumn, itemPriceWithoutVATColumn,
+            itemStatusColumn, itemStorageLocationColumn, itemContactPersonColumn;
+    @FXML
+    public TableColumn requestIDColumn, requestEmpNameColumn, requestItemNameColumn, requestUnitOfMeasurements,
+            requestQuantityColumn, requestPriceWithoutVATColumn, requestCommentColumn, requestStatusColumn;
 
     @FXML
-    private Button addButton;
-    @FXML
-    private Button updateButton;
-    @FXML
-    private Button removeButton;
+    private Button addButton, updateButton, removeButton, openRequestButton, confirmRequestButton, rejectRequestButton;
 
     @FXML
     private void initialize() {
         ObservableList<Item> itemObservableList = FXCollections.observableArrayList();
         MainApplication.loadItems(itemObservableList);
         setItemTableColumns();
-        itemTableView.setItems(itemObservableList);
+        setupItemTableView(itemObservableList);
 
+        ObservableList<TMA_Requests> requestObservableList = FXCollections.observableArrayList();
+        MainApplication.loadPurchaseRequests(requestObservableList);
+        setRequestTableColumns();
+        setupRequestTableView(requestObservableList);
+    }
+
+    private void setupItemTableView(ObservableList<Item> itemObservableList) {
         FilteredList<Item> filteredData = new FilteredList<>(itemObservableList, p -> true);
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> filteredData.setPredicate(item -> {
-            if (newValue == null || newValue.isEmpty()) {
-                return true;
-            }
-            String lowerCaseFilter = newValue.toLowerCase();
-            return item.getItemName().toLowerCase().contains(lowerCaseFilter);
-        }));
+        itemSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredData.setPredicate(item -> {
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+                String lowerCaseFilter = newValue.toLowerCase();
+                return item.getItemName().toLowerCase().contains(lowerCaseFilter);
+            });
+        });
 
         SortedList<Item> sortedData = new SortedList<>(filteredData);
         sortedData.comparatorProperty().bind(itemTableView.comparatorProperty());
         itemTableView.setItems(sortedData);
     }
-        public void setItemTableColumns(){
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("itemID"));
+
+    private void setupRequestTableView(ObservableList<TMA_Requests> requestObservableList) {
+        FilteredList<TMA_Requests> filteredRequests = new FilteredList<>(requestObservableList, p -> true);
+        requestSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredRequests.setPredicate(request -> {
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+                return String.valueOf(request.getRequestID()).contains(newValue);
+            });
+        });
+
+        SortedList<TMA_Requests> sortedRequests = new SortedList<>(filteredRequests);
+        sortedRequests.comparatorProperty().bind(requestTableView.comparatorProperty());
+        requestTableView.setItems(sortedRequests);
+    }
+
+    public void setItemTableColumns(){
+        itemIDColumn.setCellValueFactory(new PropertyValueFactory<>("itemID"));
         itemNameColumn.setCellValueFactory(new PropertyValueFactory<>("itemName"));
         groupNameColumn.setCellValueFactory(new PropertyValueFactory<>("groupName"));
-        unitOfMeasurementColumn.setCellValueFactory(new PropertyValueFactory<>("unitOfMeasurement"));
-        quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-        priceWithoutVATColumn.setCellValueFactory(new PropertyValueFactory<>("priceWithoutVAT"));
-        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
-        storageLocationColumn.setCellValueFactory(new PropertyValueFactory<>("storageLocation"));
-        contactPersonColumn.setCellValueFactory(new PropertyValueFactory<>("contactPerson"));
+        itemUnitOfMeasurementColumn.setCellValueFactory(new PropertyValueFactory<>("unitOfMeasurement"));
+        itemQuantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        itemPriceWithoutVATColumn.setCellValueFactory(new PropertyValueFactory<>("priceWithoutVAT"));
+        itemStatusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+        itemStorageLocationColumn.setCellValueFactory(new PropertyValueFactory<>("storageLocation"));
+        itemContactPersonColumn.setCellValueFactory(new PropertyValueFactory<>("contactPerson"));
+    }
+    public void setRequestTableColumns(){
+        requestIDColumn.setCellValueFactory(new PropertyValueFactory<>("requestID"));
+        requestEmpNameColumn.setCellValueFactory(new PropertyValueFactory<>("empName"));
+        requestItemNameColumn.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+        requestUnitOfMeasurements.setCellValueFactory(new PropertyValueFactory<>("unitOfMeasurements"));
+        requestQuantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        requestPriceWithoutVATColumn.setCellValueFactory(new PropertyValueFactory<>("priceWithoutVAT"));
+        requestCommentColumn.setCellValueFactory(new PropertyValueFactory<>("comment"));
+        requestStatusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
     }
 }
