@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.tmawarehouse.Controllers.CoordinatorController">
+    <TextField fx:id="searchField" promptText="Search by name" maxWidth="1.7976931348623157E308" />
+    <TableView fx:id="itemTableView">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" />
+            <TableColumn fx:id="itemNameColumn" text="Item Name" />
+            <TableColumn fx:id="groupNameColumn" text="Group Name" />
+            <TableColumn fx:id="unitOfMeasurementColumn" text="Unit of Measurement" />
+            <TableColumn fx:id="quantityColumn" text="Quantity" />
+            <TableColumn fx:id="priceWithoutVATColumn" text="Price Without VAT" />
+            <TableColumn fx:id="statusColumn" text="Status" />
+            <TableColumn fx:id="storageLocationColumn" text="Storage Location" />
+            <TableColumn fx:id="contactPersonColumn" text="Contact Person" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <Button fx:id="addButton" text="Add" />
+        <Button fx:id="updateButton" text="Update" />
+        <Button fx:id="removeButton" text="Remove" />
+    </HBox>
+</VBox>

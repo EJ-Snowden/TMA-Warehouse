@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.tmawarehouse.Controllers.MainController">
+  <Text text="Welcome! Please choose your role:" />
+  <Button text="Coordinator" onAction="#handleCoordinatorAction" prefWidth="200" style="-fx-font-size: 14; -fx-base: #ADD8E6;" />
+  <Button text="Employee" onAction="#handleEmployeeAction" prefWidth="200" style="-fx-font-size: 14; -fx-base: #ADD8E6;" />
+  <Button text="Administrator" onAction="#handleAdministratorAction" prefWidth="200" style="-fx-font-size: 14; -fx-base: #ADD8E6;" />
+</VBox>
