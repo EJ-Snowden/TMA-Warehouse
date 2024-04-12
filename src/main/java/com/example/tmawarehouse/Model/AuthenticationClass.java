@@ -1,5 +1,6 @@
 package com.example.tmawarehouse.Model;
 
+import com.example.tmawarehouse.Data.Emp;
 import com.example.tmawarehouse.MainApplication;
 
 import java.sql.ResultSet;
@@ -9,15 +10,16 @@ import java.sql.Statement;
 public class AuthenticationClass implements AuthenticationService{
     static Statement statement;
     @Override
-    public boolean authenticate(String role, String name, String password) {
+    public Emp authenticate(String role, String name, String password) {
         try {
             if (MainApplication.getDBHelper().getConnection() != null) {
                 statement = MainApplication.getDBHelper().getConnection().createStatement();
-                String query = "SELECT EmpName, EmpRole, Password FROM Emp";
+                String query = "SELECT EmpId, EmpName, EmpRole, Password FROM Emp";
                 ResultSet rs = statement.executeQuery(query);
                 while (rs.next()){
-                    if (name.equalsIgnoreCase(rs.getString("EmpName")) && role.equalsIgnoreCase(rs.getString("EmpRole")))
-                        return password.equals(rs.getString("Password"));
+                    if (name.equalsIgnoreCase(rs.getString("EmpName")) && role.equalsIgnoreCase(rs.getString("EmpRole"))) {
+                        return new Emp(rs.getInt("EmpID"), rs.getString("EmpName"), rs.getString("EmpRole"));
+                    }
                 }
                 statement.close();
             } else {
@@ -28,6 +30,6 @@ public class AuthenticationClass implements AuthenticationService{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
 }

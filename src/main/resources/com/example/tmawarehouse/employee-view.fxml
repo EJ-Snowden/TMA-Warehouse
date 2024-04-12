@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:controller="com.example.tmawarehouse.Controllers.EmployeeController" xmlns:fx="http://javafx.com/fxml" spacing="10">
+    <Label text="Items List" style="-fx-font-size: 16px;" />
+    <TextField fx:id="itemsSearchField" promptText="Search by request ID" maxWidth="1.7976931348623157E308" />
+    <TableView fx:id="itemsTable">
+        <columns>
+            <TableColumn text="Item Name" fx:id="itemNameColumn" />
+            <TableColumn text="Unit of Measurement" fx:id="unitOfMeasurementColumn" />
+            <TableColumn text="Quantity" fx:id="quantityColumn" />
+            <TableColumn text="Price Without VAT" fx:id="priceColumn" />
+        </columns>
+    </TableView>
+    <Label text="Order Form" style="-fx-font-size: 16px;" />
+    <TextField fx:id="requestSearchField" promptText="Search by request ID" maxWidth="1.7976931348623157E308" />
+        <TableView fx:id="requestsTable">
+            <columns>
+                <TableColumn text="ID" fx:id="requestIDColumn" />
+                <TableColumn text="Item Name" fx:id="ItemNameColumn" />
+                <TableColumn text="Unit of Measurement" fx:id="rUnitOfMeasurementColumn" />
+                <TableColumn text="Quantity" fx:id="rQuantityColumn" />
+                <TableColumn text="Price Without VAT" fx:id="rPriceColumn" />
+                <TableColumn text="Comment" fx:id="rCommentColumn" />
+                <TableColumn text="Status" fx:id="rStatusColumn" />
+            </columns>
+        </TableView>
+        <Button text="Order" onAction="#handleOrderButton"/>
+</VBox>

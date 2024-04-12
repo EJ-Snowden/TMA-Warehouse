@@ -1,5 +1,7 @@
 package com.example.tmawarehouse.Model;
 
+import com.example.tmawarehouse.Data.Emp;
+
 public interface AuthenticationService {
-    boolean authenticate(String role, String name, String password);
+    Emp authenticate(String role, String name, String password);
 }

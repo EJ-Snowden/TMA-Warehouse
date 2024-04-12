@@ -1,6 +1,8 @@
 package com.example.tmawarehouse.Controllers;
 
+import com.example.tmawarehouse.Data.Emp;
 import com.example.tmawarehouse.Model.AuthenticationClass;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -14,19 +16,12 @@ import javafx.util.Pair;
 public class MainController {
     private Stage stage;
 
-    @FXML
-    private void handleCoordinatorAction() {
-        showPasswordWindow("Coordinator");
-    }
+    private Emp emp;
 
     @FXML
-    private void handleEmployeeAction() {
-        showPasswordWindow("Employee");
-    }
-
-    @FXML
-    private void handleAdministratorAction() {
-        showPasswordWindow("Administrator");
+    private void handlePasswordAction(ActionEvent actionEvent) {
+        Button button = (Button) actionEvent.getSource();
+        showPasswordWindow(button.getText());
     }
 
     private void showPasswordWindow(String role) {
@@ -59,11 +54,11 @@ public class MainController {
             String name = usernamePassword.getKey();
             String pass = usernamePassword.getValue();
 
-            if (new AuthenticationClass().authenticate(role, name, pass)) {
+            if ((emp = new AuthenticationClass().authenticate(role, name, pass)) != null) {
                 if ("Coordinator".equals(role)) {
                     openController("/com/example/tmawarehouse/coordinator-view.fxml", "Coordinator Window");
                 } else if ("Employee".equals(role)) {
-//                    openController("/com/example/tmawarehouse/coordinator-view.fxml", "Coordinator Window");
+                    openController("/com/example/tmawarehouse/employee-view.fxml", "Employee Window");
                 } else if ("Administrator".equals(role)){
 //                    openController("/com/example/tmawarehouse/coordinator-view.fxml", "Coordinator Window");
                 }
@@ -82,6 +77,11 @@ public class MainController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(resourceName));
             Parent root = loader.load();
+
+            if (emp.getEmpRole().equalsIgnoreCase("employee")){
+                EmployeeController employeeController = loader.getController();
+                employeeController.setEmp(emp);
+            }
 
             Stage stage = new Stage();
             stage.setTitle(windowName);
