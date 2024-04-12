@@ -1,13 +1,13 @@
 package com.example.tmawarehouse.Controllers;
 
+import com.example.tmawarehouse.Data.DialogData;
 import com.example.tmawarehouse.Data.Item;
 import com.example.tmawarehouse.Data.TMA_Requests;
 import com.example.tmawarehouse.Data.UnitOfMeasurements;
 import com.example.tmawarehouse.MainApplication;
+import com.example.tmawarehouse.Model.ItemRepositoryClass;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -16,7 +16,6 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Pair;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -37,10 +36,9 @@ public class CoordinatorController {
     private TableColumn<Item, String> itemNameColumn, groupNameColumn;
     @FXML
     public TableColumn itemUnitOfMeasurementColumn, itemQuantityColumn, itemPriceWithoutVATColumn,
-            itemStatusColumn, itemStorageLocationColumn, itemContactPersonColumn;
-    @FXML
-    public TableColumn requestIDColumn, requestEmpNameColumn, requestItemNameColumn, requestUnitOfMeasurements,
-            requestQuantityColumn, requestPriceWithoutVATColumn, requestCommentColumn, requestStatusColumn;
+            itemStatusColumn, itemStorageLocationColumn, itemContactPersonColumn, requestIDColumn, requestEmpNameColumn,
+            requestItemNameColumn, requestUnitOfMeasurements, requestQuantityColumn, requestPriceWithoutVATColumn, requestCommentColumn,
+            requestStatusColumn;
 
     @FXML
     private Button addButton, updateButton, removeButton, openRequestButton, confirmRequestButton, rejectRequestButton;
@@ -49,6 +47,7 @@ public class CoordinatorController {
     ObservableList<Item> itemObservableList;
     ObservableList<TMA_Requests> requestObservableList;
     ArrayList<UnitOfMeasurements> unitOfMeasurementsList = new ArrayList<>();
+    ItemRepositoryClass itemRepositoryClass;
 
     @FXML
     private void initialize() {
@@ -63,39 +62,16 @@ public class CoordinatorController {
         setupRequestTableView(requestObservableList);
 
         MainApplication.loadUnitOfMeasurements(unitOfMeasurementsList);
+
+        itemRepositoryClass = new ItemRepositoryClass(MainApplication.getDBHelper());
     }
 
     private void setupItemTableView(ObservableList<Item> itemObservableList) {
-        FilteredList<Item> filteredData = new FilteredList<>(itemObservableList, p -> true);
-        itemSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(item -> {
-                if (newValue == null || newValue.isEmpty()) {
-                    return true;
-                }
-                String lowerCaseFilter = newValue.toLowerCase();
-                return item.getItemName().toLowerCase().contains(lowerCaseFilter);
-            });
-        });
-
-        SortedList<Item> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(itemTableView.comparatorProperty());
-        itemTableView.setItems(sortedData);
+        EmployeeController.SetUpItemView(itemObservableList, itemSearchField, itemTableView);
     }
 
     private void setupRequestTableView(ObservableList<TMA_Requests> requestObservableList) {
-        FilteredList<TMA_Requests> filteredRequests = new FilteredList<>(requestObservableList, p -> true);
-        requestSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredRequests.setPredicate(request -> {
-                if (newValue == null || newValue.isEmpty()) {
-                    return true;
-                }
-                return String.valueOf(request.getRequestID()).contains(newValue);
-            });
-        });
-
-        SortedList<TMA_Requests> sortedRequests = new SortedList<>(filteredRequests);
-        sortedRequests.comparatorProperty().bind(requestTableView.comparatorProperty());
-        requestTableView.setItems(sortedRequests);
+        EmployeeController.SetUpRequestView(requestObservableList, requestSearchField, requestTableView);
     }
 
     public void setItemTableColumns(){
@@ -120,32 +96,7 @@ public class CoordinatorController {
         requestStatusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
     }
 
-    protected static class DialogData {
-        public Dialog<Pair<String, String>> dialog;
-        public TextField itemIDField;
-        public TextField itemNameField;
-        public TextField groupNameField;
-        public ComboBox unitOfMeasurementComboBox;
-        public TextField quantityField;
-        public TextField priceWithoutVATField;
-        public TextField statusField;
-        public TextField storageLocationField;
-        public TextField contactPersonField;
 
-        public DialogData(Dialog<Pair<String, String>> dialog, TextField itemNameField, TextField groupNameField,
-                          ComboBox unitOfMeasurementComboBox, TextField quantityField, TextField priceWithoutVATField,
-                          TextField statusField, TextField storageLocationField, TextField contactPersonField) {
-            this.dialog = dialog;
-            this.itemNameField = itemNameField;
-            this.groupNameField = groupNameField;
-            this.unitOfMeasurementComboBox = unitOfMeasurementComboBox;
-            this.quantityField = quantityField;
-            this.priceWithoutVATField = priceWithoutVATField;
-            this.statusField = statusField;
-            this.storageLocationField = storageLocationField;
-            this.contactPersonField = contactPersonField;
-        }
-    }
     private DialogData createItemDialog(String title, String headerText) {
         Dialog<Pair<String, String>> dialog = new Dialog<>();
         dialog.setTitle(title);
@@ -220,24 +171,15 @@ public class CoordinatorController {
                             !String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()).isEmpty() && !dialogData.quantityField.getText().isEmpty() &&
                             !dialogData.priceWithoutVATField.getText().isEmpty()){
                         try {
-                            String query = "UPDATE Items SET ItemName = ?, ItemGroup = ?, UnitOfMeasurement = ?, Quantity = ?, " +
-                                    "PriceWithoutVAT = ?, Status = ?, StorageLocation = ?, ContactPerson = ? " +
-                                    "WHERE ITEMID = ?";
-
-                            fillQuery(dialogData, query);
+                            preparedStatement = itemRepositoryClass.insertNewItem(dialogData, preparedStatement);
                             int index = itemTableView.getSelectionModel().getSelectedItem().getItemID();
                             preparedStatement.setInt(9, index);
 
-                            preparedStatement.executeUpdate();
-                            preparedStatement.close();
+                            itemRepositoryClass.execStatement(preparedStatement);
 
                             refreshItemsTable();
                         } catch (SQLException e) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle(e.getSQLState());
-                            alert.setHeaderText(null);
-                            alert.setContentText(e.getLocalizedMessage());
-                            alert.showAndWait();
+                            showAlert(e.getSQLState(), e.getLocalizedMessage());
                         }
                     }else showAlert("updat");
 
@@ -255,48 +197,15 @@ public class CoordinatorController {
     public void handleRemoveButtonAction() {
         Item selectedItem = itemTableView.getSelectionModel().getSelectedItem();
         if(selectedItem != null){
-            try {
-                String query = "DELETE FROM Items WHERE ITEMID = ?";
-                preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(query);
-                int index = itemTableView.getSelectionModel().getSelectedItem().getItemID();
-                preparedStatement.setInt(1, index);
+            int index = itemTableView.getSelectionModel().getSelectedItem().getItemID();
 
-                preparedStatement.execute();
-                preparedStatement.close();
+            itemRepositoryClass.delete(index, preparedStatement, itemTableView);
 
-                itemObservableList.remove(itemObservableList.get(itemTableView.getSelectionModel().getSelectedIndex()));
-                setupItemTableView(itemObservableList);
-            } catch (SQLException e) {
-                showAlert("remov");
-            }
+            itemObservableList.remove(itemObservableList.get(itemTableView.getSelectionModel().getSelectedIndex()));
+            setupItemTableView(itemObservableList);
         }else {
             showAlert("Invalid Operation", "No request selected or request already processed.");
         }
-    }
-
-    public void fillQuery(DialogData dialogData, String query){
-        try {
-            preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(query);
-            preparedStatement.setString(1, dialogData.itemNameField.getText());
-            preparedStatement.setString(2, dialogData.groupNameField.getText());
-            preparedStatement.setString(3, String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()));
-            preparedStatement.setInt(4, Integer.parseInt(dialogData.quantityField.getText()));
-            preparedStatement.setDouble(5, Double.parseDouble(dialogData.priceWithoutVATField.getText()));
-            preparedStatement.setString(6, dialogData.statusField.getText());
-            preparedStatement.setString(7, dialogData.storageLocationField.getText());
-            preparedStatement.setString(8, dialogData.contactPersonField.getText());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public void showAlert(String action){
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Item wasn't " + action + "d");
-        alert.setHeaderText(null);
-        if (!action.equalsIgnoreCase("remov")) alert.setContentText("Fill all necessary fields");
-        alert.showAndWait();
     }
 
     @FXML
@@ -306,45 +215,39 @@ public class CoordinatorController {
 
         dialogData.dialog.setResultConverter(dialogButton -> {
             if (dialogButton.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
-                if (!dialogData.itemNameField.getText().isEmpty() && !dialogData.groupNameField.getText().isEmpty() &&
-                        !String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()).isEmpty() && !dialogData.quantityField.getText().isEmpty() &&
-                        !dialogData.priceWithoutVATField.getText().isEmpty()){
-                    try {
-                        String query = "INSERT INTO Items(ItemName, ItemGroup, UnitOfMeasurement, Quantity, PriceWithoutVAT, Status, StorageLocation, ContactPerson) " +
-                                "VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
-                        fillQuery(dialogData, query);
+                int itemId = itemRepositoryClass.selectItemId(dialogData, statement);
+                String itemName = dialogData.itemNameField.getText();
+                String groupName = dialogData.groupNameField.getText();
+                String unitOfMeasurement = String.valueOf(dialogData.unitOfMeasurementComboBox.getValue());
+                int quantity;
+                try {
+                    quantity = Integer.parseInt(dialogData.quantityField.getText());
+                } catch (NumberFormatException e) {
+                    quantity = 0;
+                }
+                double priceWithoutVAT;
+                try {
+                    priceWithoutVAT = Double.parseDouble(dialogData.priceWithoutVATField.getText());
+                } catch (NumberFormatException e) {
+                    priceWithoutVAT = 0;
+                }
+                String status = dialogData.statusField.getText();
+                String storageLocation = dialogData.storageLocationField.getText();
+                String contactPerson = dialogData.contactPersonField.getText();
+                if (!itemName.isEmpty() && !groupName.isEmpty() && !String.valueOf(unitOfMeasurement).isEmpty()
+                        && quantity != 0 && priceWithoutVAT != 0){
+                    preparedStatement = itemRepositoryClass.insertNewItem(dialogData, preparedStatement);
 
-                        preparedStatement.execute();
+                    itemRepositoryClass.execStatement(preparedStatement);
 
-                        preparedStatement.close();
+                    itemObservableList.add(new Item(itemId, itemName, groupName, unitOfMeasurement, quantity, priceWithoutVAT,
+                            status, storageLocation, contactPerson));
 
-                        query = "SELECT MAX(ItemID) FROM ITEMS";
-                        statement = MainApplication.getDBHelper().getConnection().createStatement();
-                        ResultSet rs = statement.executeQuery(query);
-                        int itemID = 0;
-                        while (rs.next()){
-                            itemID = rs.getInt(1);
-                        }
-                        statement.close();
-
-                        itemObservableList.add(new Item(itemID, dialogData.itemNameField.getText(), dialogData.groupNameField.getText(),
-                                String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()), Integer.parseInt(dialogData.quantityField.getText()),
-                                Double.parseDouble(dialogData.priceWithoutVATField.getText()), dialogData.statusField.getText(),
-                                dialogData.storageLocationField.getText(), dialogData.contactPersonField.getText()));
-
-                        setupItemTableView(itemObservableList);
-                    } catch (SQLException e) {
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle(e.getSQLState());
-                        alert.setHeaderText(null);
-                        alert.setContentText(e.getLocalizedMessage());
-                        alert.showAndWait();
-                    }
+                    setupItemTableView(itemObservableList);
                 }else showAlert("add");
             }
             return null;
         });
-
         dialogData.dialog.showAndWait();
     }
 
@@ -415,28 +318,19 @@ public class CoordinatorController {
         alert.setContentText(content);
         alert.showAndWait();
     }
+    public void showAlert(String action){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Item wasn't " + action + "d");
+        alert.setHeaderText(null);
+        if (!action.equalsIgnoreCase("remov")) alert.setContentText("Fill all necessary fields");
+        alert.showAndWait();
+    }
     @FXML
     public void confirmRequestAction() {
         TMA_Requests selectedRequest = requestTableView.getSelectionModel().getSelectedItem();
         if (selectedRequest != null && selectedRequest.getStatus().equalsIgnoreCase("New")) {
-            try {
-                String query = "UPDATE Items SET Quantity = Quantity - ? WHERE ITEMID = ?";
-                preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(query);
-                preparedStatement.setInt(1, selectedRequest.getQuantity());
-                preparedStatement.setInt(2, selectedRequest.getItemID());
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
-
-                String updateRequestQuery = "UPDATE TMA_REQUESTS SET Status = 'Approved' WHERE RequestID = ?";
-                preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(updateRequestQuery);
-                preparedStatement.setInt(1, selectedRequest.getRequestID());
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
-
-                refreshTables();
-            } catch (SQLException e) {
-                showAlert("Database Error", "Failed to update the item quantity: " + e.getLocalizedMessage());
-            }
+            itemRepositoryClass.updateQuantity(preparedStatement, selectedRequest);
+            refreshTables();
         } else {
             showAlert("Invalid Operation", "No request selected or request already processed.");
         }
@@ -453,24 +347,13 @@ public class CoordinatorController {
 
             Optional<String> result = dialog.showAndWait();
             result.ifPresent(reason -> {
-                try {
-                    String updateRequestQuery = "UPDATE TMA_REQUESTS SET Status = 'Rejected', \"COMMENT\" = ? WHERE RequestID = ?";
-                    preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(updateRequestQuery);
-                    preparedStatement.setString(1, reason);
-                    preparedStatement.setInt(2, selectedRequest.getRequestID());
-                    preparedStatement.executeUpdate();
-                    preparedStatement.close();
-
-                    refreshRequestsTable();
-                } catch (SQLException e) {
-                    showAlert("Database Error", "Failed to reject the request: " + e.getLocalizedMessage());
-                }
+                itemRepositoryClass.updateRejectStatus(preparedStatement, selectedRequest ,reason);
+                refreshRequestsTable();
             });
         } else {
             showAlert("Invalid Operation", "No request selected or request already processed.");
         }
     }
-
     private void refreshTables() {
         itemObservableList.clear();
         requestObservableList.clear();

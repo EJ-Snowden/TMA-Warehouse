@@ -5,6 +5,7 @@ import com.example.tmawarehouse.Data.Item;
 import com.example.tmawarehouse.Data.TMA_Requests;
 import com.example.tmawarehouse.Data.UnitOfMeasurements;
 import com.example.tmawarehouse.MainApplication;
+import com.example.tmawarehouse.Model.TMA_RequestRepositoryClass;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -15,8 +16,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 
 public class EmployeeController {
@@ -41,9 +40,9 @@ public class EmployeeController {
     ObservableList<TMA_Requests> requestObservableList;
     ArrayList<UnitOfMeasurements> unitOfMeasurementsList = new ArrayList<>();
     Item selectedItem;
-    Statement statement;
     PreparedStatement preparedStatement;
     Emp emp;
+    TMA_RequestRepositoryClass tmaRequestRepositoryClass;
 
 
     @FXML
@@ -51,7 +50,7 @@ public class EmployeeController {
         itemObservableList = FXCollections.observableArrayList();
         MainApplication.loadItems(itemObservableList);
         setItemTableColumns();
-        setupItemTableView(itemObservableList);
+        setUpItemTableView(itemObservableList);
 
         requestObservableList = FXCollections.observableArrayList();
         MainApplication.loadPurchaseRequests(requestObservableList);
@@ -59,6 +58,8 @@ public class EmployeeController {
         setupRequestTableView(requestObservableList);
 
         MainApplication.loadUnitOfMeasurements(unitOfMeasurementsList);
+
+        tmaRequestRepositoryClass = new TMA_RequestRepositoryClass(MainApplication.getDBHelper());
     }
 
     public void setEmp(Emp emp){
@@ -122,7 +123,7 @@ public class EmployeeController {
     private void updatePriceBasedOnQuantity() {
         if (!quantityField.getText().isEmpty()) {
             int quantity = Integer.parseInt(quantityField.getText());
-            double price = quantity * selectedItem.getPriceWithoutVAT();  // Assume getPriceWithoutVAT returns the unit price
+            double price = quantity * selectedItem.getPriceWithoutVAT();
             priceField.setText(String.format("%.2f", price));
         } else {
             priceField.setText("0.00");
@@ -136,25 +137,12 @@ public class EmployeeController {
 
     private void handleFormSubmission() {
         if (!unitField.getText().isEmpty() && !priceField.getText().isEmpty() && !quantityField.getText().isEmpty()){
-            String query = "INSERT INTO TMA_REQUESTS(EmployeeID, ItemID, UnitOfMeasurement, Quantity, PriceWithoutVAT, \"COMMENT\", Status) " +
-                    "VALUES(?, ?, ?, ?, ?, ?, ?)";
-            try {
-                preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(query);
-                preparedStatement.setInt(1, emp.getEmpId());
-                preparedStatement.setInt(2, selectedItem.getItemID());
-                preparedStatement.setString(3, unitField.getText());
-                preparedStatement.setInt(4, Integer.parseInt(quantityField.getText()));
-                preparedStatement.setDouble(5, Double.parseDouble(priceField.getText().replace(",", ".")));
-                preparedStatement.setString(6, commentField.getText());
-                preparedStatement.setString(7, "New");
+            preparedStatement = tmaRequestRepositoryClass.insertNewRequest(preparedStatement, selectedItem, emp.getEmpId(), unitField.getText(),
+                    Integer.parseInt(quantityField.getText()), Double.parseDouble(priceField.getText().replace(",", ".")),
+                    commentField.getText());
 
-                preparedStatement.execute();
-                preparedStatement.close();
-
-                refreshRequestsTable();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            tmaRequestRepositoryClass.execStatement(preparedStatement);
+            refreshRequestsTable();
         }else showAlert("Request wasn't added", "Fill all necessary fields");
     }
     private void showAlert(String title, String content) {
@@ -179,7 +167,11 @@ public class EmployeeController {
         rCommentColumn.setCellValueFactory(new PropertyValueFactory<>("comment"));
         rStatusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
     }
-    private void setupItemTableView(ObservableList<Item> itemObservableList) {
+    private void setUpItemTableView(ObservableList<Item> itemObservableList) {
+        SetUpItemView(itemObservableList, itemsSearchField, itemsTable);
+    }
+
+    static void SetUpItemView(ObservableList<Item> itemObservableList, TextField itemsSearchField, TableView<Item> itemsTable) {
         FilteredList<Item> filteredData = new FilteredList<>(itemObservableList, p -> true);
         itemsSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredData.setPredicate(item -> {
@@ -197,6 +189,10 @@ public class EmployeeController {
     }
 
     private void setupRequestTableView(ObservableList<TMA_Requests> requestObservableList) {
+        SetUpRequestView(requestObservableList, requestSearchField, requestsTable);
+    }
+
+    static void SetUpRequestView(ObservableList<TMA_Requests> requestObservableList, TextField requestSearchField, TableView<TMA_Requests> requestsTable) {
         FilteredList<TMA_Requests> filteredRequests = new FilteredList<>(requestObservableList, p -> true);
         requestSearchField.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredRequests.setPredicate(request -> {
