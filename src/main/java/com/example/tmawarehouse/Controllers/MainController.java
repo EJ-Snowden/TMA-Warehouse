@@ -59,8 +59,6 @@ public class MainController {
                     openController("/com/example/tmawarehouse/coordinator-view.fxml", "Coordinator Window");
                 } else if ("Employee".equals(role)) {
                     openController("/com/example/tmawarehouse/employee-view.fxml", "Employee Window");
-                } else if ("Administrator".equals(role)){
-//                    openController("/com/example/tmawarehouse/coordinator-view.fxml", "Coordinator Window");
                 }
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
