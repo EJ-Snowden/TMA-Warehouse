@@ -23,9 +23,9 @@
     </TableView>
 
     <HBox spacing="10">
-        <Button fx:id="addButton" text="Add" />
-        <Button fx:id="updateButton" text="Update" />
-        <Button fx:id="removeButton" text="Remove" />
+        <Button fx:id="addButton" text="Add" onAction="#handleAddButtonAction"/>
+        <Button fx:id="updateButton" text="Update" onAction="#handleUpdateButtonAction"/>
+        <Button fx:id="removeButton" text="Remove" onAction="#handleRemoveButtonAction"/>
     </HBox>
 
     <TextField fx:id="requestSearchField" promptText="Search by request ID" maxWidth="1.7976931348623157E308" />

@@ -1,5 +1,6 @@
 package com.example.tmawarehouse;
 
+import com.example.tmawarehouse.Controllers.MainController;
 import com.example.tmawarehouse.Data.Item;
 import com.example.tmawarehouse.Data.TMA_Requests;
 import com.example.tmawarehouse.Model.DBHelper;
@@ -20,11 +21,15 @@ public class MainApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("/com/example/tmawarehouse/main-view.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/tmawarehouse/main-view.fxml"));
+        Parent root = loader.load();
         Scene scene = new Scene(root, 400, 200);
         stage.setTitle("Inventory Management System");
         stage.setScene(scene);
         stage.show();
+
+        MainController controller = loader.getController();
+        controller.setStage(stage);
     }
     public static void loadItems(ObservableList<Item> itemList) {
         try {

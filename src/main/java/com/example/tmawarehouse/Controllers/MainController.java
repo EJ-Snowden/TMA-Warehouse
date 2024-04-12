@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 
 public class MainController {
+    private Stage stage;
 
     @FXML
     private void handleCoordinatorAction() {
@@ -75,6 +76,7 @@ public class MainController {
             }
         });
     }
+
     @FXML
     private void openController(String resourceName, String windowName) {
         try {
@@ -86,8 +88,12 @@ public class MainController {
             stage.setScene(new Scene(root));
             stage.show();
 
+            this.stage.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 }
