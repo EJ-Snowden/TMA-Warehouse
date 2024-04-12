@@ -43,8 +43,8 @@
     </TableView>
 
     <HBox spacing="10">
-        <Button fx:id="openRequestButton" text="Open Request" />
-        <Button fx:id="confirmRequestButton" text="Confirm" />
-        <Button fx:id="rejectRequestButton" text="Reject" />
+        <Button fx:id="openRequestButton" text="Open Request" onAction="#handleOpenRequestAction"/>
+        <Button fx:id="confirmRequestButton" text="Confirm" onAction="#confirmRequestAction"/>
+        <Button fx:id="rejectRequestButton" text="Reject" onAction="#rejectRequestAction"/>
     </HBox>
 </VBox>

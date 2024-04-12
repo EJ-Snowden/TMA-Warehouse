@@ -2,12 +2,14 @@ package com.example.tmawarehouse.Controllers;
 
 import com.example.tmawarehouse.Data.Item;
 import com.example.tmawarehouse.Data.TMA_Requests;
+import com.example.tmawarehouse.Data.UnitOfMeasurements;
 import com.example.tmawarehouse.MainApplication;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
@@ -17,6 +19,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CoordinatorController {
 
@@ -43,6 +48,7 @@ public class CoordinatorController {
     PreparedStatement preparedStatement;
     ObservableList<Item> itemObservableList;
     ObservableList<TMA_Requests> requestObservableList;
+    ArrayList<UnitOfMeasurements> unitOfMeasurementsList = new ArrayList<>();
 
     @FXML
     private void initialize() {
@@ -55,6 +61,8 @@ public class CoordinatorController {
         MainApplication.loadPurchaseRequests(requestObservableList);
         setRequestTableColumns();
         setupRequestTableView(requestObservableList);
+
+        MainApplication.loadUnitOfMeasurements(unitOfMeasurementsList);
     }
 
     private void setupItemTableView(ObservableList<Item> itemObservableList) {
@@ -117,7 +125,7 @@ public class CoordinatorController {
         public TextField itemIDField;
         public TextField itemNameField;
         public TextField groupNameField;
-        public TextField unitOfMeasurementField;
+        public ComboBox unitOfMeasurementComboBox;
         public TextField quantityField;
         public TextField priceWithoutVATField;
         public TextField statusField;
@@ -125,12 +133,12 @@ public class CoordinatorController {
         public TextField contactPersonField;
 
         public DialogData(Dialog<Pair<String, String>> dialog, TextField itemNameField, TextField groupNameField,
-                          TextField unitOfMeasurementField, TextField quantityField, TextField priceWithoutVATField,
+                          ComboBox unitOfMeasurementComboBox, TextField quantityField, TextField priceWithoutVATField,
                           TextField statusField, TextField storageLocationField, TextField contactPersonField) {
             this.dialog = dialog;
             this.itemNameField = itemNameField;
             this.groupNameField = groupNameField;
-            this.unitOfMeasurementField = unitOfMeasurementField;
+            this.unitOfMeasurementComboBox = unitOfMeasurementComboBox;
             this.quantityField = quantityField;
             this.priceWithoutVATField = priceWithoutVATField;
             this.statusField = statusField;
@@ -151,8 +159,12 @@ public class CoordinatorController {
         itemNameField.setPromptText("Item Name");
         TextField groupNameField = new TextField();
         groupNameField.setPromptText("Group Name");
-        TextField unitOfMeasurementField = new TextField();
-        unitOfMeasurementField.setPromptText("Unit of Measurement");
+        ComboBox<String> unitOfMeasurementComboBox = new ComboBox<>();
+        ObservableList<String> unitNames = FXCollections.observableArrayList(
+                unitOfMeasurementsList.stream().map(UnitOfMeasurements::getUnitName).collect(Collectors.toList())
+        );
+        unitOfMeasurementComboBox.setItems(unitNames);
+        unitOfMeasurementComboBox.setPromptText("Unit of Measurement");
         TextField quantityField = new TextField();
         quantityField.setPromptText("Quantity");
         TextField priceWithoutVATField = new TextField();
@@ -169,7 +181,7 @@ public class CoordinatorController {
         grid.add(new Label("Group Name:"), 0, 1);
         grid.add(groupNameField, 1, 1);
         grid.add(new Label("Unit of Measurement:"), 0, 2);
-        grid.add(unitOfMeasurementField, 1, 2);
+        grid.add(unitOfMeasurementComboBox, 1, 2);
         grid.add(new Label("Quantity:"), 0, 3);
         grid.add(quantityField, 1, 3);
         grid.add(new Label("Price Without VAT:"), 0, 4);
@@ -183,7 +195,7 @@ public class CoordinatorController {
 
         dialog.getDialogPane().setContent(grid);
 
-        return new DialogData(dialog, itemNameField, groupNameField, unitOfMeasurementField, quantityField, priceWithoutVATField,
+        return new DialogData(dialog, itemNameField, groupNameField, unitOfMeasurementComboBox, quantityField, priceWithoutVATField,
                 statusField, storageLocationField, contactPersonField);
     }
     @FXML
@@ -195,7 +207,7 @@ public class CoordinatorController {
 
             dialogData.itemNameField.setText(itemTableView.getSelectionModel().getSelectedItem().getItemName());
             dialogData.groupNameField.setText(itemTableView.getSelectionModel().getSelectedItem().getGroupName());
-            dialogData.unitOfMeasurementField.setText(itemTableView.getSelectionModel().getSelectedItem().getUnitOfMeasurement());
+            dialogData.unitOfMeasurementComboBox.setValue(selectedItem.getUnitOfMeasurement());
             dialogData.quantityField.setText(String.valueOf(itemTableView.getSelectionModel().getSelectedItem().getQuantity()));
             dialogData.priceWithoutVATField.setText(String.valueOf(itemTableView.getSelectionModel().getSelectedItem().getPriceWithoutVAT()));
             dialogData.statusField.setText(itemTableView.getSelectionModel().getSelectedItem().getStatus());
@@ -205,7 +217,7 @@ public class CoordinatorController {
             dialogData.dialog.setResultConverter(dialogButton -> {
                 if (dialogButton.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
                     if (!dialogData.itemNameField.getText().isEmpty() && !dialogData.groupNameField.getText().isEmpty() &&
-                            !dialogData.unitOfMeasurementField.getText().isEmpty() && !dialogData.quantityField.getText().isEmpty() &&
+                            !String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()).isEmpty() && !dialogData.quantityField.getText().isEmpty() &&
                             !dialogData.priceWithoutVATField.getText().isEmpty()){
                         try {
                             String query = "UPDATE Items SET ItemName = ?, ItemGroup = ?, UnitOfMeasurement = ?, Quantity = ?, " +
@@ -216,12 +228,10 @@ public class CoordinatorController {
                             int index = itemTableView.getSelectionModel().getSelectedItem().getItemID();
                             preparedStatement.setInt(9, index);
 
-                            preparedStatement.execute();
+                            preparedStatement.executeUpdate();
                             preparedStatement.close();
 
-                            itemObservableList.clear();
-                           MainApplication.loadItems(itemObservableList);
-                            setupItemTableView(itemObservableList);
+                            refreshItemsTable();
                         } catch (SQLException e) {
                             Alert alert = new Alert(Alert.AlertType.ERROR);
                             alert.setTitle(e.getSQLState());
@@ -236,6 +246,8 @@ public class CoordinatorController {
             });
             dialogData.dialog.showAndWait();
 
+        }else{
+            showAlert("Invalid Operation", "No items selected or request already processed.");
         }
     }
 
@@ -255,13 +267,11 @@ public class CoordinatorController {
                 itemObservableList.remove(itemObservableList.get(itemTableView.getSelectionModel().getSelectedIndex()));
                 setupItemTableView(itemObservableList);
             } catch (SQLException e) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle(e.getSQLState());
-                alert.setHeaderText(null);
-                alert.setContentText(e.getLocalizedMessage());
-                alert.showAndWait();
+                showAlert("remov");
             }
-        }else showAlert("remov");
+        }else {
+            showAlert("Invalid Operation", "No request selected or request already processed.");
+        }
     }
 
     public void fillQuery(DialogData dialogData, String query){
@@ -269,7 +279,7 @@ public class CoordinatorController {
             preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(query);
             preparedStatement.setString(1, dialogData.itemNameField.getText());
             preparedStatement.setString(2, dialogData.groupNameField.getText());
-            preparedStatement.setString(3, dialogData.unitOfMeasurementField.getText());
+            preparedStatement.setString(3, String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()));
             preparedStatement.setInt(4, Integer.parseInt(dialogData.quantityField.getText()));
             preparedStatement.setDouble(5, Double.parseDouble(dialogData.priceWithoutVATField.getText()));
             preparedStatement.setString(6, dialogData.statusField.getText());
@@ -297,7 +307,7 @@ public class CoordinatorController {
         dialogData.dialog.setResultConverter(dialogButton -> {
             if (dialogButton.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
                 if (!dialogData.itemNameField.getText().isEmpty() && !dialogData.groupNameField.getText().isEmpty() &&
-                        !dialogData.unitOfMeasurementField.getText().isEmpty() && !dialogData.quantityField.getText().isEmpty() &&
+                        !String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()).isEmpty() && !dialogData.quantityField.getText().isEmpty() &&
                         !dialogData.priceWithoutVATField.getText().isEmpty()){
                     try {
                         String query = "INSERT INTO Items(ItemName, ItemGroup, UnitOfMeasurement, Quantity, PriceWithoutVAT, Status, StorageLocation, ContactPerson) " +
@@ -318,7 +328,7 @@ public class CoordinatorController {
                         statement.close();
 
                         itemObservableList.add(new Item(itemID, dialogData.itemNameField.getText(), dialogData.groupNameField.getText(),
-                                dialogData.unitOfMeasurementField.getText(), Integer.parseInt(dialogData.quantityField.getText()),
+                                String.valueOf(dialogData.unitOfMeasurementComboBox.getValue()), Integer.parseInt(dialogData.quantityField.getText()),
                                 Double.parseDouble(dialogData.priceWithoutVATField.getText()), dialogData.statusField.getText(),
                                 dialogData.storageLocationField.getText(), dialogData.contactPersonField.getText()));
 
@@ -336,5 +346,149 @@ public class CoordinatorController {
         });
 
         dialogData.dialog.showAndWait();
+    }
+
+    @FXML
+    public void handleOpenRequestAction() {
+        TMA_Requests selectedRequest = requestTableView.getSelectionModel().getSelectedItem();
+        if (selectedRequest != null) {
+            openRequestDialog(selectedRequest);
+        } else {
+            showAlert("No Request Selected", "Please select a request to view details.");
+        }
+    }
+
+    private void openRequestDialog(TMA_Requests request) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Purchase Request Details");
+        dialog.setHeaderText("Details for Request ID: " + request.getRequestID());
+
+        Item item = MainApplication.getItemDetails(request.getItemID());
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setAlignment(Pos.CENTER_LEFT);
+
+        TextField itemNameField = new TextField(item.getItemName());
+        itemNameField.setEditable(false);
+        TextField groupNameField = new TextField(item.getGroupName());
+        groupNameField.setEditable(false);
+        TextField unitOfMeasurementField = new TextField(item.getUnitOfMeasurement());
+        unitOfMeasurementField.setEditable(false);
+        TextField quantityField = new TextField(String.valueOf(item.getQuantity()));
+        quantityField.setEditable(false);
+        TextField priceField = new TextField(String.format("%.2f", item.getPriceWithoutVAT()));
+        priceField.setEditable(false);
+        TextField statusField = new TextField(item.getStatus());
+        statusField.setEditable(false);
+        TextField storageLocationField = new TextField(item.getStorageLocation());
+        storageLocationField.setEditable(false);
+        TextField contactPersonField = new TextField(item.getContactPerson());
+        contactPersonField.setEditable(false);
+
+        grid.add(new Label("Item Name:"), 0, 0);
+        grid.add(itemNameField, 1, 0);
+        grid.add(new Label("Group Name:"), 0, 1);
+        grid.add(groupNameField, 1, 1);
+        grid.add(new Label("Unit of Measurement:"), 0, 2);
+        grid.add(unitOfMeasurementField, 1, 2);
+        grid.add(new Label("Quantity:"), 0, 3);
+        grid.add(quantityField, 1, 3);
+        grid.add(new Label("Price Without VAT:"), 0, 4);
+        grid.add(priceField, 1, 4);
+        grid.add(new Label("Status:"), 0, 5);
+        grid.add(statusField, 1, 5);
+        grid.add(new Label("Storage Location:"), 0, 6);
+        grid.add(storageLocationField, 1, 6);
+        grid.add(new Label("Contact Person:"), 0, 7);
+        grid.add(contactPersonField, 1, 7);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.showAndWait();
+    }
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+    @FXML
+    public void confirmRequestAction() {
+        TMA_Requests selectedRequest = requestTableView.getSelectionModel().getSelectedItem();
+        if (selectedRequest != null && selectedRequest.getStatus().equalsIgnoreCase("New")) {
+            try {
+                String query = "UPDATE Items SET Quantity = Quantity - ? WHERE ITEMID = ?";
+                preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(query);
+                preparedStatement.setInt(1, selectedRequest.getQuantity());
+                preparedStatement.setInt(2, selectedRequest.getItemID());
+                preparedStatement.executeUpdate();
+                preparedStatement.close();
+
+                String updateRequestQuery = "UPDATE TMA_REQUESTS SET Status = 'Approved' WHERE RequestID = ?";
+                preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(updateRequestQuery);
+                preparedStatement.setInt(1, selectedRequest.getRequestID());
+                preparedStatement.executeUpdate();
+                preparedStatement.close();
+
+                refreshTables();
+            } catch (SQLException e) {
+                showAlert("Database Error", "Failed to update the item quantity: " + e.getLocalizedMessage());
+            }
+        } else {
+            showAlert("Invalid Operation", "No request selected or request already processed.");
+        }
+    }
+
+    @FXML
+    public void rejectRequestAction() {
+        TMA_Requests selectedRequest = requestTableView.getSelectionModel().getSelectedItem();
+        if (selectedRequest != null && selectedRequest.getStatus().equalsIgnoreCase("New")) {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Reject Request");
+            dialog.setHeaderText("Rejecting Request ID: " + selectedRequest.getRequestID());
+            dialog.setContentText("Please enter the reason for rejection:");
+
+            Optional<String> result = dialog.showAndWait();
+            result.ifPresent(reason -> {
+                try {
+                    String updateRequestQuery = "UPDATE TMA_REQUESTS SET Status = 'Rejected', \"COMMENT\" = ? WHERE RequestID = ?";
+                    preparedStatement = MainApplication.getDBHelper().getConnection().prepareStatement(updateRequestQuery);
+                    preparedStatement.setString(1, reason);
+                    preparedStatement.setInt(2, selectedRequest.getRequestID());
+                    preparedStatement.executeUpdate();
+                    preparedStatement.close();
+
+                    refreshRequestsTable();
+                } catch (SQLException e) {
+                    showAlert("Database Error", "Failed to reject the request: " + e.getLocalizedMessage());
+                }
+            });
+        } else {
+            showAlert("Invalid Operation", "No request selected or request already processed.");
+        }
+    }
+
+    private void refreshTables() {
+        itemObservableList.clear();
+        requestObservableList.clear();
+        MainApplication.loadItems(itemObservableList);
+        MainApplication.loadPurchaseRequests(requestObservableList);
+        setupItemTableView(itemObservableList);
+        setupRequestTableView(requestObservableList);
+    }
+
+    private void refreshRequestsTable() {
+        requestObservableList.clear();
+        MainApplication.loadPurchaseRequests(requestObservableList);
+        setupRequestTableView(requestObservableList);
+    }
+
+    private void refreshItemsTable() {
+        requestObservableList.clear();
+        MainApplication.loadPurchaseRequests(requestObservableList);
+        setupRequestTableView(requestObservableList);
     }
 }
