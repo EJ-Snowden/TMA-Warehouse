@@ -17,7 +17,8 @@ public class AuthenticationClass implements AuthenticationService{
                 String query = "SELECT EmpId, EmpName, EmpRole, Password FROM Emp";
                 ResultSet rs = statement.executeQuery(query);
                 while (rs.next()){
-                    if (name.equalsIgnoreCase(rs.getString("EmpName")) && role.equalsIgnoreCase(rs.getString("EmpRole"))) {
+                    if (name.equalsIgnoreCase(rs.getString("EmpName")) && role.equalsIgnoreCase(rs.getString("EmpRole")) &&
+                            password.equals(rs.getString("Password"))) {
                         return new Emp(rs.getInt("EmpID"), rs.getString("EmpName"), rs.getString("EmpRole"));
                     }
                 }

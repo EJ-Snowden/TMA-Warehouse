@@ -7,5 +7,4 @@
   <Text text="Welcome! Please choose your role:" />
   <Button text="Coordinator" onAction="#handlePasswordAction" prefWidth="200" style="-fx-font-size: 14; -fx-base: #ADD8E6;" />
   <Button text="Employee" onAction="#handlePasswordAction" prefWidth="200" style="-fx-font-size: 14; -fx-base: #ADD8E6;" />
-  <Button text="Administrator" onAction="#handlePasswordAction" prefWidth="200" style="-fx-font-size: 14; -fx-base: #ADD8E6;" />
 </VBox>

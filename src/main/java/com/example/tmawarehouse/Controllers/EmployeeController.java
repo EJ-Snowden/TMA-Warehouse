@@ -25,7 +25,7 @@ public class EmployeeController {
     @FXML
     public TableView<TMA_Requests> requestsTable;
     @FXML
-    public TableColumn requestIDColumn, rUnitOfMeasurementColumn, rQuantityColumn, rPriceColumn, rCommentColumn, rStatusColumn, ItemNameColumn;
+    public TableColumn requestIDColumn, rUnitOfMeasurementColumn, groupNameColumn, rQuantityColumn, rPriceColumn, rCommentColumn, rStatusColumn, ItemNameColumn;
     @FXML
     public TextField requestSearchField, itemsSearchField;
     @FXML
@@ -153,10 +153,11 @@ public class EmployeeController {
         alert.showAndWait();
     }
     public void setItemTableColumns(){
-        itemNameColumn.setCellValueFactory(new PropertyValueFactory<>("itemID"));
-        unitOfMeasurementColumn.setCellValueFactory(new PropertyValueFactory<>("itemName"));
-        quantityColumn.setCellValueFactory(new PropertyValueFactory<>("groupName"));
-        priceColumn.setCellValueFactory(new PropertyValueFactory<>("unitOfMeasurement"));
+        itemNameColumn.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+        groupNameColumn.setCellValueFactory(new PropertyValueFactory<>("groupName"));
+        unitOfMeasurementColumn.setCellValueFactory(new PropertyValueFactory<>("unitOfMeasurement"));
+        quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        priceColumn.setCellValueFactory(new PropertyValueFactory<>("priceWithoutVAT"));
     }
     public void setRequestTableColumns(){
         requestIDColumn.setCellValueFactory(new PropertyValueFactory<>("requestID"));

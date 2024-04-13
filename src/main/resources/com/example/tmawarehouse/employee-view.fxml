@@ -9,6 +9,7 @@
     <TableView fx:id="itemsTable">
         <columns>
             <TableColumn text="Item Name" fx:id="itemNameColumn" />
+            <TableColumn text="Group Name" fx:id="groupNameColumn" />
             <TableColumn text="Unit of Measurement" fx:id="unitOfMeasurementColumn" />
             <TableColumn text="Quantity" fx:id="quantityColumn" />
             <TableColumn text="Price Without VAT" fx:id="priceColumn" />
